@@ -1,0 +1,89 @@
+from google import search
+import gensim
+from gensim import corpora,models
+import nltk
+from nltk.corpus import stopwords
+import urllib.request as ur
+import easygui
+from bs4 import BeautifulSoup as BS
+
+stop_words = set(stopwords.words('english'))
+#print ("Enter the name of File starting with \\\\")
+file=easygui.fileopenbox(msg=None, title=None, default="C:\\Users\\Vikrant Kuhad\\Desktop", filetypes=["*.txt","*.pdf"], multiple=False )
+my_content=open(file).read()
+tokens=nltk.word_tokenize(my_content)
+#print(tokens)
+for x in tokens:
+    if x in stop_words:
+       tokens.remove(x)
+#print('\n')
+#print(tokens)
+#print('\n')
+nl=[]
+c=0
+for i in range(len(tokens)):
+    if (tokens[i]=='.'):
+        nl.append(tokens[c+1:i])
+        c=i
+#print(nl)
+#print('\n')
+dictionary = corpora.Dictionary(nl)
+corpus = [dictionary.doc2bow(text) for text in nl]
+#print(corpus[0])
+#print("\n")
+ldamodel = gensim.models.ldamodel.LdaModel(corpus, num_topics=3, id2word = dictionary, passes=20)
+#print(ldamodel.print_topics(num_topics=3, num_words=3))
+#print("\n")
+mylist=ldamodel.print_topics(num_topics=3, num_words=8)
+#print (mylist)
+#print("\n")
+s=[mylist[m][n] for m in range(3) for n in range(2)]
+new=[]
+for v in range (len(s)):
+    if v%2==1:
+        new.append(s[v])
+#print(new)
+#print("\n")
+ujjwal=[]
+length1=len(new)
+for f in range (length1):
+    length2=len(new[f])
+    w=0
+    while w<length2:
+        if (ord(new[f][w])  in range(65,91) or ord(new[f][w])  in range(97,123)):
+            temp=""
+            while (ord(new[f][w])  in range(65,91) or ord(new[f][w])  in range(97,123)):
+                temp=temp+str(new[f][w])
+                w=w+1
+            ujjwal.append(temp)
+        else:
+            w=w+1
+#print(ujjwal)
+newstring=""
+for a in ujjwal:
+    newstring=newstring+" "+a
+#print(newstring)
+query=newstring
+#print("You can search these links for more relevant results:")
+#print("\n")
+z=1
+lk=[]
+for res in search(query,tld="co.in",num=3,stop=1,pause=2):
+    hdr = {'User-Agent': 'Mozilla/5.0'}
+    req = ur.Request(res,headers=hdr)
+    page = ur.urlopen(req)
+    soup = BS(page,"lxml")
+    tushar=soup.get_text()
+    rajvanshi=0
+    kuhad=0
+    tokens2=nltk.word_tokenize(tushar)
+    #k=(str(z)+". "+str(res)+" --->"+str(vik)+"%")       
+    for q in tokens:
+        if  q in tokens2:
+            rajvanshi=rajvanshi+1
+        vik=((rajvanshi)/(len(tokens)))*100
+    k=(str(z)+". "+str(res)+" --->"+str(vik)+"%")
+    z=z+1
+    lk.append(k)
+lkj="\n".join(lk)
+easygui.msgbox(msg=lkj, title="You can search these links for more relevant results:")
